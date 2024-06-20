@@ -1,0 +1,4 @@
+<resources>
+    <attr name="roundedItemColor" format="color"/>
+    <attr name="actionIconColor" format="color"/>
+</resources>

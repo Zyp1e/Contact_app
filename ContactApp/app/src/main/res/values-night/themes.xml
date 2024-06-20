@@ -1,0 +1,14 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="Base.Theme.AddressBook" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:windowBackground">@color/backgroundDark</item>
+        <item name="android:textColorPrimary">@color/textColorPrimaryDark</item>
+
+        <item name="roundedItemColor">@color/roundedItemDark</item>
+        <item name="actionIconColor">@color/white</item>
+    </style>
+
+</resources>

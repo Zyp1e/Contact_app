@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="50dp"
+    android:orientation="horizontal"
+    android:padding="8dp">
+
+    <RadioButton
+        android:id="@+id/radio_group"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:id="@+id/tv_group_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textSize="18sp"
+        android:text="分组名" />
+
+    <ImageButton
+        android:id="@+id/btn_group_edit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="重命名"
+        android:src="@drawable/ic_action_rename"
+        android:textColor="#2196F3"
+        android:backgroundTint="#00FFFFFF"/>
+
+    <ImageButton
+        android:id="@+id/btn_group_del"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#2196F3"
+        android:backgroundTint="#00FFFFFF"
+        android:src="@drawable/ic_action_del"
+        android:text="删除" />
+
+
+</LinearLayout>
