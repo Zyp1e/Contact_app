@@ -230,6 +230,7 @@ public class MainActivity extends AppCompatActivity {
                 int position = findContactPositionByLetter(letter);
                 if (position != -1) {
                     binding.recyclerViewContacts.scrollToPosition(position);
+                    contactAdapter.setSelectedPosition(position); // 设置选中位置
                 }
             });
             binding.alphabetIndexView.addView(textView);
@@ -238,12 +239,13 @@ public class MainActivity extends AppCompatActivity {
 
     private int findContactPositionByLetter(char letter) {
         for (int i = 0; i < contactList.size(); i++) {
-            if (contactList.get(i).getName().startsWith(String.valueOf(letter), 1)) {
+            if (contactList.get(i).getName().substring(0, 1).equalsIgnoreCase(String.valueOf(letter))) {
                 return i;
             }
         }
         return -1;
     }
+
 
     // 模拟获取联系人数据
     private void loadContacts() {
