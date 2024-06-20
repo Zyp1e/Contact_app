@@ -5,7 +5,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +20,7 @@ public class ContactDatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_PHONE_NUMBER = "phone_number";
     public static final String COLUMN_CONTACT_GROUP = "contact_group";
     public static final String COLUMN_PHOTO_URI = "photo_uri";
-    private static final String TAG = "db";
+
     public ContactDatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -29,7 +28,7 @@ public class ContactDatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         String createTable = "CREATE TABLE " + TABLE_NAME + " (" +
-                COLUMN_ID + " INTEGER PRIMARY KEY," +
+                COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                 COLUMN_NAME + " TEXT," +
                 COLUMN_NICKNAME + " TEXT," +
                 COLUMN_PHONE_NUMBER + " TEXT," +
@@ -47,7 +46,6 @@ public class ContactDatabaseHelper extends SQLiteOpenHelper {
     public long insertContact(Contact contact) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put(COLUMN_ID, contact.getId());
         values.put(COLUMN_NAME, contact.getName());
         values.put(COLUMN_NICKNAME, contact.getNickname());
         values.put(COLUMN_PHONE_NUMBER, contact.getPhoneNumber());
@@ -59,11 +57,10 @@ public class ContactDatabaseHelper extends SQLiteOpenHelper {
     }
 
     public List<Contact> getAllContacts() {
+        List<Contact> contacts = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.query(TABLE_NAME, null, null, null, null, null, null);
-        List<Contact> contacts = new ArrayList<>();
-        if (cursor.moveToFirst()) {
-//            int i=0;
+        if (cursor != null && cursor.moveToFirst()) {
             do {
                 long id = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_ID));
                 String name = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NAME));
@@ -72,11 +69,9 @@ public class ContactDatabaseHelper extends SQLiteOpenHelper {
                 String group = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CONTACT_GROUP));
                 String photoUri = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_PHOTO_URI));
                 contacts.add(new Contact(id, name, nickname, phoneNumber, group, photoUri));
-//                ++i;
-//                Log.d(TAG,"now is"+i);
             } while (cursor.moveToNext());
+            cursor.close();
         }
-        cursor.close();
         db.close();
         return contacts;
     }
@@ -99,5 +94,21 @@ public class ContactDatabaseHelper extends SQLiteOpenHelper {
         int rowsDeleted = db.delete(TABLE_NAME, COLUMN_ID + " = ?", new String[]{String.valueOf(contactId)});
         db.close();
         return rowsDeleted;
+    }
+
+    public List<String> getAllGroups() {
+        List<String> groups = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(true, TABLE_NAME, new String[]{COLUMN_CONTACT_GROUP}, null,
+                null, null, null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                String group = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CONTACT_GROUP));
+                groups.add(group);
+            } while (cursor.moveToNext());
+            cursor.close();
+        }
+        db.close();
+        return groups;
     }
 }
