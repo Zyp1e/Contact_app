@@ -3,22 +3,25 @@ package com.example.contactapp;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowInsetsController;
 import android.widget.TextView;
-
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
-
 import com.example.contactapp.databinding.ActivityMainBinding;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -51,6 +54,11 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
         setSupportActionBar(binding.toolbar);
         getSupportActionBar().setTitle("联系人");
 
@@ -222,6 +230,7 @@ public class MainActivity extends AppCompatActivity {
                 int position = findContactPositionByLetter(letter);
                 if (position != -1) {
                     binding.recyclerViewContacts.scrollToPosition(position);
+                    contactAdapter.setSelectedPosition(position); // 设置选中位置
                 }
             });
             binding.alphabetIndexView.addView(textView);
@@ -230,12 +239,25 @@ public class MainActivity extends AppCompatActivity {
 
     private int findContactPositionByLetter(char letter) {
         for (int i = 0; i < contactList.size(); i++) {
-            String name = contactList.get(i).getName();
-            if (Character.toUpperCase(name.charAt(0)) == Character.toUpperCase(letter)) {
+            if (contactList.get(i).getName().substring(0, 1).equalsIgnoreCase(String.valueOf(letter))) {
                 return i;
             }
         }
-        return -1;  // 如果找不到对应字母的联系人，返回-1
+        return -1;
+    }
+
+
+    // 模拟获取联系人数据
+    private void loadContacts() {
+        contactList = dbHelper.getAllContacts();
+        for (Contact contact : contactList) {
+            int i=1;
+            if (!groupList.contains(contact.getGroup())) {
+                contact.setGroup("全部");
+            }
+            Log.d(TAG,"now is"+i);
+        }
+        contactList.sort((c1, c2) -> c1.getName().compareToIgnoreCase(c2.getName()));
     }
 
     private Contact findContactById(long id) {
@@ -244,11 +266,8 @@ public class MainActivity extends AppCompatActivity {
                 return contact;
             }
         }
-        return null;  // 如果找不到对应ID的联系人，返回null
+        return null;
     }
 
-    private void loadContacts() {
-        contactList = dbHelper.getAllContacts();
-        groupList = dbHelper.getAllGroups();
-    }
+
 }
