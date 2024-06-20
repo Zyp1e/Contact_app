@@ -83,27 +83,40 @@ public class ContactDetailActivity extends AppCompatActivity {
     }
 
     private void loadContact() {
+        // 从Intent中获取传递的联系人对象
         contact = getIntent().getParcelableExtra("contact");
+
         if (contact != null) {
+            // 如果联系人对象不为空，显示联系人的详细信息
             if (getSupportActionBar() != null) {
-                getSupportActionBar().setTitle(contact.getName());
+                getSupportActionBar().setTitle(contact.getName());  // 设置标题为联系人姓名
             }
-            binding.etName.setText(contact.getName());
-            binding.etNickname.setText(contact.getNickname());
-            binding.etPhoneNumber.setText(contact.getPhoneNumber());
+            binding.etName.setText(contact.getName());  // 设置姓名文本框
+            binding.etNickname.setText(contact.getNickname());  // 设置昵称文本框
+            binding.etPhoneNumber.setText(contact.getPhoneNumber());  // 设置电话号码文本框
+            // 设置分组下拉框的选择项
             binding.spinnerGroup.setSelection(groupList.indexOf(contact.getGroup()));
+
             if (contact.getPhotoUri() != null) {
+                // 如果有设置过照片URI，则显示照片
                 binding.imgContactPhoto.setImageURI(Uri.parse(contact.getPhotoUri()));
             } else {
-                binding.imgContactPhoto.setImageBitmap(contact.createBitmapFromCharacter(
-                        contact.getName().charAt(contact.getName().length() - 1),
-                        500, Color.WHITE, 10));
+                // 如果未设置照片URI，使用联系人姓名的第一个字符生成位图显示
+                if (!TextUtils.isEmpty(contact.getName())) {
+                    binding.imgContactPhoto.setImageBitmap(contact.createBitmapFromCharacter(
+                            contact.getName().charAt(0),  // 获取姓名的第一个字符
+                            500, Color.WHITE, 10));  // 设置位图参数
+                } else {
+                    // 处理姓名为空的情况
+                    binding.imgContactPhoto.setImageResource(R.drawable.rounded_item);  // 设置默认头像或者空白图片
+                }
             }
         } else {
-            // 创建新联系人
+            // 如果联系人对象为空，创建一个新的联系人对象
             if (getSupportActionBar() != null) {
-                getSupportActionBar().setTitle("新建联系人");
+                getSupportActionBar().setTitle("新建联系人");  // 设置标题为新建联系人
             }
+            // 使用当前时间戳创建新的联系人对象
             contact = new Contact(System.currentTimeMillis(), "", "", "", "", null);
         }
     }
