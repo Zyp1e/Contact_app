@@ -10,10 +10,13 @@ import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.contactapp.databinding.ItemContactCardBinding;
 import com.example.contactapp.databinding.ItemContactListBinding;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -29,6 +32,8 @@ public class ContactAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     private static final int VIEW_TYPE_LIST = 1;
     private static final int VIEW_TYPE_CARD = 2;
+
+    private int selectedPosition = -1; // 用于存储选中的联系人位置
 
     public interface ContactClickListener {
         void onContactClick(Contact contact);
@@ -63,9 +68,9 @@ public class ContactAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         Contact contact = filteredContactList.get(position);
         if (holder instanceof ListViewHolder) {
-            ((ListViewHolder) holder).bind(contact, clickListener);
+            ((ListViewHolder) holder).bind(contact, clickListener, position == selectedPosition);
         } else if (holder instanceof CardViewHolder) {
-            ((CardViewHolder) holder).bind(contact, clickListener);
+            ((CardViewHolder) holder).bind(contact, clickListener, position == selectedPosition);
         }
     }
 
@@ -82,8 +87,9 @@ public class ContactAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             this.binding = binding;
         }
 
-        public void bind(final Contact contact, final ContactClickListener clickListener) {
+        public void bind(final Contact contact, final ContactClickListener clickListener, boolean isSelected) {
             binding.textViewName.setText(contact.getName());
+            binding.textViewName.setTextColor(isSelected ? Color.RED : Color.BLACK);
             binding.getRoot().setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -101,8 +107,9 @@ public class ContactAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             this.binding = binding;
         }
 
-        public void bind(final Contact contact, final ContactClickListener clickListener) {
+        public void bind(final Contact contact, final ContactClickListener clickListener, boolean isSelected) {
             binding.textViewName.setText(contact.getName());
+            binding.textViewName.setTextColor(isSelected ? Color.RED : Color.BLACK);
             if (contact.getPhotoUri() != null) {
                 binding.imgContactPhoto.setImageURI(Uri.parse(contact.getPhotoUri()));
             } else {
@@ -206,5 +213,11 @@ public class ContactAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             }
         }
         return -1;
+    }
+
+    // 新增：设置选中的联系人位置
+    public void setSelectedPosition(int position) {
+        selectedPosition = position;
+        notifyDataSetChanged();
     }
 }
