@@ -273,11 +273,7 @@ public class MainActivity extends AppCompatActivity {
         return null;  // 如果找不到对应ID的联系人，返回null
     }
 
-    private void loadContacts() {
-        // 加载联系人数据
-        contactList = dbHelper.getAllContacts(); // 从数据库中获取所有联系人
-        groupList = dbHelper.getAllGroups(); // 从数据库中获取所有分组
-    }
+
 }
 /*
         1. 加载设置
