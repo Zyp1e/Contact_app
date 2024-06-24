@@ -1,13 +1,26 @@
 package com.example.contactapp;
 
+import android.Manifest;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.view.Window;
+import android.view.WindowInsetsController;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.contactapp.databinding.ActivitySettingsBinding;
@@ -25,34 +38,64 @@ public class SettingsActivity extends AppCompatActivity {
 
     private GroupAdapter groupAdapter;
     private List<String> groupList = new ArrayList<>();
+    private String group;
     private boolean isListLayout = true;
     private boolean isDarkTheme = true;
+    private GroupAdapter.OnGroupActionListener action;
     private SharedPreferences sharedPreferences;
+    private ActivityResultLauncher<String[]> pickCsvFileLauncher;
+    private ActivityResultLauncher<String> createCsvFileLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // 加载配置信息
         loadSettings();
 
-        // 初始化视图
+        // 初始化view
         super.onCreate(savedInstanceState);
         binding = ActivitySettingsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
         setSupportActionBar(binding.toolbar);
         getSupportActionBar().setTitle("设置");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
-        // 设置是否选择暗黑模式
         binding.radioLightTheme.setChecked(!isDarkTheme);
         binding.radioDarkTheme.setChecked(isDarkTheme);
-
-        // 设置列表布局和卡片布局的选择状态
         binding.radioListLayout.setChecked(isListLayout);
         binding.radioCardLayout.setChecked(!isListLayout);
 
-        // 设置分组列表适配器
-        groupAdapter = new GroupAdapter(groupList, true, "", (group, action) -> {
+        // 检查和请求存储权限
+        checkAndRequestPermissions();
+
+        // 初始化导入导出功能的 ActivityResultLauncher
+        pickCsvFileLauncher = registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
+            if (uri != null) {
+                ContactImporter.importContactsFromUri(this, uri);
+            }
+        });
+
+        createCsvFileLauncher = registerForActivityResult(new ActivityResultContracts.CreateDocument(), uri -> {
+            if (uri != null) {
+                ContactExporter.exportContactsToUri(this, uri);
+            }
+        });
+
+        // 设置导入按钮点击事件
+        binding.btnImportContacts.setOnClickListener(view -> {
+            pickCsvFileLauncher.launch(new String[]{"*/*"});
+        });
+
+        // 设置导出按钮点击事件
+        binding.btnExportContacts.setOnClickListener(view -> {
+            createCsvFileLauncher.launch("contacts.csv");
+        });
+
+        // 更改group
+        groupAdapter = new GroupAdapter(groupList, true, group, (group, action) -> {
             switch (action) {
                 case "edit":
                     showEditGroupDialog(group);
@@ -65,10 +108,9 @@ public class SettingsActivity extends AppCompatActivity {
         binding.recyclerViewGroups.setLayoutManager(new LinearLayoutManager(this));
         binding.recyclerViewGroups.setAdapter(groupAdapter);
 
-        // 添加分组按钮点击事件
         binding.btnAddGroup.setOnClickListener(v -> showAddGroupDialog());
 
-        // 监听显示模式变化，保存到 SharedPreferences
+        // 更改显示模式
         binding.radioGroupLayout.setOnCheckedChangeListener((group, checkedId) -> {
             SharedPreferences.Editor editor = sharedPreferences.edit();
             if (checkedId == R.id.radio_list_layout) {
@@ -79,32 +121,52 @@ public class SettingsActivity extends AppCompatActivity {
             editor.apply();
         });
 
-        // 监听主题选择变化，保存到 SharedPreferences，并重建 Activity 切换主题
+        // 更改主题
         binding.radioGroupTheme.setOnCheckedChangeListener((group, checkedId) -> {
             SharedPreferences.Editor editor = sharedPreferences.edit();
             boolean useDarkTheme = checkedId == R.id.radio_dark_theme;
             editor.putBoolean("isDarkTheme", useDarkTheme);
             editor.apply();
-            recreate(); // 重建 Activity 切换主题
+            recreate();
         });
     }
 
-    // 加载 SharedPreferences 中保存的设置信息
+    private void checkAndRequestPermissions() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+            }, 1);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 1) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "存储权限已授予", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "需要存储权限才能导入或导出联系人", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
     private void loadSettings() {
         sharedPreferences = getSharedPreferences("settings", MODE_PRIVATE);
         isDarkTheme = sharedPreferences.getBoolean("isDarkTheme", false);
-        loadTheme(isDarkTheme); // 加载主题设置
+        loadTheme(isDarkTheme);
         isListLayout = sharedPreferences.getBoolean("isListLayout", true);
 
-        // 加载分组列表
         Set<String> defaultGroupSet = new HashSet<>();
         defaultGroupSet.add("全部");
         Set<String> groupSet = sharedPreferences.getStringSet("groupList", Collections.unmodifiableSet(defaultGroupSet));
+
         groupList = new ArrayList<>(groupSet);
-        Collections.sort(groupList); // 排序分组列表
+        Collections.sort(groupList);
     }
 
-    // 加载主题设置
     private void loadTheme(boolean isDarkTheme) {
         if (isDarkTheme) {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
@@ -113,7 +175,6 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
-    // 保存分组列表到 SharedPreferences
     private void saveGroups() {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         Set<String> groupSet = new HashSet<>(groupList);
@@ -122,11 +183,11 @@ public class SettingsActivity extends AppCompatActivity {
         setResult(RESULT_OK);
     }
 
-    // 显示添加分组的对话框
     private void showAddGroupDialog() {
         EditText input = new EditText(this);
         input.setHint("输入分组名称");
-        input.setPadding(100, 0, 100, 0);
+//        input.setPadding(100, 0, 100, 0);
+        input.setHeight(200);
         input.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -136,11 +197,12 @@ public class SettingsActivity extends AppCompatActivity {
         dialog.setContentView(input);
         dialog.setOnDismissListener(dialog1 -> {
             String groupName = input.getText().toString().trim();
-            // 检查分组名称是否合法
+
             if (!groupName.isEmpty() && !groupList.contains(groupName)) {
                 groupList.add(groupList.size(), groupName);
-                groupAdapter.notifyItemInserted(groupList.size() - 1);
-                saveGroups(); // 保存分组列表
+                Collections.sort(groupList);
+                groupAdapter.notifyDataSetChanged();
+                saveGroups();
             } else {
                 Toast.makeText(this, "不允许的分组名", Toast.LENGTH_SHORT).show();
             }
@@ -148,7 +210,6 @@ public class SettingsActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    // 显示编辑分组的对话框
     private void showEditGroupDialog(String group) {
         EditText input = new EditText(this);
         input.setHint("输入分组名称");
@@ -163,12 +224,13 @@ public class SettingsActivity extends AppCompatActivity {
         dialog.setContentView(input);
         dialog.setOnDismissListener(dialog1 -> {
             String newGroupName = input.getText().toString().trim();
+
             int position = groupList.indexOf(group);
-            // 检查新的分组名称是否合法
             if (!newGroupName.isEmpty() && !groupList.contains(newGroupName) && position != -1) {
                 groupList.set(position, newGroupName);
                 groupAdapter.notifyItemChanged(position);
-                saveGroups(); // 保存分组列表
+                saveGroups();
+
             } else {
                 Toast.makeText(this, "不允许的分组名", Toast.LENGTH_SHORT).show();
             }
@@ -176,13 +238,12 @@ public class SettingsActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    // 删除分组
     private void deleteGroup(String group) {
         int position = groupList.indexOf(group);
         if (position != -1) {
             groupList.remove(position);
             groupAdapter.notifyItemRemoved(position);
-            saveGroups(); // 保存分组列表
+            saveGroups();
             Toast.makeText(this, "删除成功", Toast.LENGTH_SHORT).show();
         }
     }
