@@ -230,6 +230,7 @@ public class MainActivity extends AppCompatActivity {
                 int position = findContactPositionByLetter(letter);
                 if (position != -1) {
                     binding.recyclerViewContacts.scrollToPosition(position);
+                    contactAdapter.setSelectedPosition(position); // 设置选中位置
                 }
             });
             binding.alphabetIndexView.addView(textView); // 添加字母索引视图
@@ -239,12 +240,27 @@ public class MainActivity extends AppCompatActivity {
     private int findContactPositionByLetter(char letter) {
         // 根据字母查找联系人在列表中的位置
         for (int i = 0; i < contactList.size(); i++) {
-            String name = contactList.get(i).getName();
-            if (Character.toUpperCase(name.charAt(0)) == Character.toUpperCase(letter)) {
-                return i; // 找到匹配字母的联系人，返回其在列表中的位置
+
+            if (contactList.get(i).getName().substring(0, 1).equalsIgnoreCase(String.valueOf(letter))) {
+                return i;
             }
         }
-        return -1;  // 如果找不到对应字母的联系人，返回-1
+        return -1;
+    }
+
+
+    // 模拟获取联系人数据
+    private void loadContacts() {
+        contactList = dbHelper.getAllContacts();
+        for (Contact contact : contactList) {
+            int i=1;
+            if (!groupList.contains(contact.getGroup())) {
+                contact.setGroup("全部");
+            }
+            Log.d(TAG,"now is"+i);
+        }
+        contactList.sort((c1, c2) -> c1.getName().compareToIgnoreCase(c2.getName()));
+
     }
 
     private Contact findContactById(long id) {
