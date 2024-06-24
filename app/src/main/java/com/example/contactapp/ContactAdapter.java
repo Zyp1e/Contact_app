@@ -113,7 +113,7 @@ public class ContactAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             if (contact.getPhotoUri() != null) {
                 binding.imgContactPhoto.setImageURI(Uri.parse(contact.getPhotoUri()));
             } else {
-                Bitmap bitmap = createBitmapFromCharacter(contact.getName().charAt(contact.getName().length() - 1), 500, Color.WHITE, 10);
+                Bitmap bitmap = createBitmapFromCharacter(contact.getName().charAt(0), 500, Color.WHITE, 10);
                 binding.imgContactPhoto.setImageBitmap(bitmap);
             }
             binding.getRoot().setOnClickListener(new View.OnClickListener() {
