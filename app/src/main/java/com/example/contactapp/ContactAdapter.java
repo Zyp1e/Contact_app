@@ -19,6 +19,7 @@ import com.example.contactapp.databinding.ItemContactCardBinding;
 import com.example.contactapp.databinding.ItemContactListBinding;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -184,6 +185,15 @@ public class ContactAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             }
         };
     }
+    // 根据字母查找联系人在列表中的位置
+    int findContactPositionByLetter(char letter) {
+        for (int i = 0; i < filteredContactList.size(); i++) {
+            if (filteredContactList.get(i).getName().substring(0, 1).equalsIgnoreCase(String.valueOf(letter))) {
+                return i;
+            }
+        }
+        return -1;
+    }
 
     public void setNameFilter(String name) {
         this.nameFilter = name;
@@ -196,34 +206,60 @@ public class ContactAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     }
 
     public void insertContact(Contact contact) {
-        filteredContactList.add(0, contact);
-        notifyItemInserted(0);
+        contactList.add(contact);
+        filterAndSortContacts(); // 重新过滤和排序联系人列表
+        notifyDataSetChanged(); // 通知适配器数据集已更改
     }
+
 
     public void updateContact(Contact contact) {
         int index = findContactIndexById(contact.getId());
         if (index != -1) {
-            filteredContactList.set(index, contact);
-            notifyItemChanged(index);
+            contactList.set(index, contact);
+            //filterAndSortContacts(); // 重新过滤和排序联系人列表
+            notifyDataSetChanged(); // 通知适配器数据集已更改
         }
     }
 
     public void delContact(Contact contact) {
         int index = findContactIndexById(contact.getId());
         if (index != -1) {
-            filteredContactList.remove(index);
-            notifyItemRemoved(index);
+            contactList.remove(index);
+            filterAndSortContacts(); // 重新过滤和排序联系人列表
+            notifyDataSetChanged(); // 通知适配器数据集已更改
         }
     }
 
     private int findContactIndexById(long id) {
-        for (int i = 0; i < filteredContactList.size(); i++) {
-            if (filteredContactList.get(i).getId() == id) {
+        for (int i = 0; i < contactList.size(); i++) {
+            if (contactList.get(i).getId() == id) {
                 return i;
             }
         }
         return -1;
     }
+
+    private void filterAndSortContacts() {
+        filteredContactList = new ArrayList<>();
+        for (Contact contact : contactList) {
+            boolean matchesName = (nameFilter == null || contact.getName().toLowerCase().contains(nameFilter.toLowerCase()));
+            boolean matchesGroup = (groupFilter == null || "全部".equals(groupFilter) || contact.getGroup().equals(groupFilter));
+            if (matchesName && matchesGroup) {
+                filteredContactList.add(contact);
+            }
+        }
+        Collections.sort(filteredContactList, (c1, c2) -> c1.getName().compareToIgnoreCase(c2.getName()));
+    }
+
+
+
+    // 新增：更新适配器中的联系人数据
+    public void updateContacts(List<Contact> newContactList) {
+        this.contactList = new ArrayList<>(newContactList);
+        filterAndSortContacts(); // 重新过滤和排序联系人列表
+        notifyDataSetChanged(); // 通知适配器数据集已更改
+    }
+
 
     // 新增：设置选中的联系人位置
     public void setSelectedPosition(int position) {
