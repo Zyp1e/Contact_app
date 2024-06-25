@@ -140,10 +140,17 @@ public class MainActivity extends AppCompatActivity {
                                 dbHelper.insertContact(updatedContact); // 插入新联系人到数据库
                                 contactAdapter.insertContact(updatedContact); // 在 RecyclerView 中插入新联系人显示
                             }
+                            reloadData(); // 重新加载数据
                         }
                     }
                 }
         );
+    }
+
+    private void reloadData() {
+        contactList = dbHelper.getAllContacts(); // 从数据库中获取所有联系人
+        contactAdapter.updateContacts(contactList); // 更新适配器中的联系人数据
+        // 其他操作...
     }
 
     private void initSettingsLauncher() {
@@ -227,7 +234,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 textView.setBackgroundResource(R.drawable.alphabet_item_background); // 设置选中背景
                 // 滑动到指定字母的联系人位置
-                int position = findContactPositionByLetter(letter);
+                int position = contactAdapter.findContactPositionByLetter(letter);
                 if (position != -1) {
                     binding.recyclerViewContacts.scrollToPosition(position);
                     contactAdapter.setSelectedPosition(position); // 设置选中位置
@@ -237,10 +244,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
     private int findContactPositionByLetter(char letter) {
         // 根据字母查找联系人在列表中的位置
         for (int i = 0; i < contactList.size(); i++) {
-
             if (contactList.get(i).getName().substring(0, 1).equalsIgnoreCase(String.valueOf(letter))) {
                 return i;
             }
@@ -248,19 +255,17 @@ public class MainActivity extends AppCompatActivity {
         return -1;
     }
 
-
     // 模拟获取联系人数据
     private void loadContacts() {
         contactList = dbHelper.getAllContacts();
         for (Contact contact : contactList) {
-            int i=1;
+            int i = 1;
             if (!groupList.contains(contact.getGroup())) {
                 contact.setGroup("全部");
             }
-            Log.d(TAG,"now is"+i);
+            Log.d(TAG, "now is" + i);
         }
         contactList.sort((c1, c2) -> c1.getName().compareToIgnoreCase(c2.getName()));
-
     }
 
     private Contact findContactById(long id) {
@@ -272,22 +277,4 @@ public class MainActivity extends AppCompatActivity {
         }
         return null;  // 如果找不到对应ID的联系人，返回null
     }
-
-    private void loadContacts() {
-        // 加载联系人数据
-        contactList = dbHelper.getAllContacts(); // 从数据库中获取所有联系人
-        groupList = dbHelper.getAllGroups(); // 从数据库中获取所有分组
-    }
 }
-/*
-        1. 加载设置
-        在 onCreate 方法中调用 loadSettings 方法来加载用户的设置。
-
-        2. 保存设置
-        在 onStop 方法中调用 saveSettings 方法来保存用户的设置。
-
-        3. 设置适配器
-        在 setAdapter 方法中设置适配器并应用上次保存的分组筛选条件。
-
-        4. 持久化设置的代码
-        新增了 loadSettings 和 saveSettings 方法来加载和保存设置，包括主题、布局模式、分组列表和当前分组。*/
