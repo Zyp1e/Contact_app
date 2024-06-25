@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.net.Uri;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -108,14 +109,21 @@ public class ContactAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             this.binding = binding;
         }
 
-        public void bind(final Contact contact, final ContactClickListener clickListener, boolean isSelected) {
+        public void bind(final Contact contact, final ContactClickListener clickListener, boolean b) {
             binding.textViewName.setText(contact.getName());
-            binding.textViewName.setTextColor(isSelected ? Color.RED : Color.BLACK);
             if (contact.getPhotoUri() != null) {
+                // 如果有设置过照片URI，则显示照片
                 binding.imgContactPhoto.setImageURI(Uri.parse(contact.getPhotoUri()));
             } else {
-                Bitmap bitmap = createBitmapFromCharacter(contact.getName().charAt(0), 500, Color.WHITE, 10);
-                binding.imgContactPhoto.setImageBitmap(bitmap);
+                // 如果未设置照片URI，使用联系人姓名的第一个字符生成位图显示
+                if (!TextUtils.isEmpty(contact.getName())) {
+                    binding.imgContactPhoto.setImageBitmap(contact.createBitmapFromCharacter(
+                            contact.getName().charAt(0),  // 获取姓名的第一个字符
+                            500, Color.WHITE, 10));  // 设置位图参数
+                } else {
+                    // 处理姓名为空的情况
+                    binding.imgContactPhoto.setImageResource(R.drawable.rounded_item);  // 设置默认头像或者空白图片
+                }
             }
             binding.getRoot().setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -124,6 +132,8 @@ public class ContactAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 }
             });
         }
+
+
 
         private Bitmap createBitmapFromCharacter(char character, int viewSize, int color, int padding) {
             Paint paint = new Paint();
