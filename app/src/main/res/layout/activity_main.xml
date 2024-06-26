@@ -48,7 +48,7 @@
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_view_contacts"
-            android:layout_width="363dp"
+            android:layout_width="330dp"
             android:layout_height="638dp"
             android:layout_marginTop="8dp"
             android:padding="8dp"

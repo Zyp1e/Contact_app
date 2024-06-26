@@ -17,11 +17,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="10dp">
 
@@ -46,6 +44,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="10dp">
+
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/recyclerView_groups"
                         android:layout_width="match_parent"
@@ -81,26 +80,57 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="10dp">
-                <RadioGroup
-                    android:id="@+id/radio_group_theme"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:paddingHorizontal="10dp">
-                    <RadioButton
-                        android:id="@+id/radio_light_theme"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="浅色主题" />
+                    android:padding="10dp">
 
-                    <RadioButton
-                        android:id="@+id/radio_dark_theme"
+                    <RadioGroup
+                        android:id="@+id/radio_group_theme"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="深色主题" />
-                </RadioGroup>
+                        android:orientation="vertical"
+                        android:paddingHorizontal="10dp">
+
+                        <RadioButton
+                            android:id="@+id/radio_light_theme"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="浅色主题" />
+
+                        <RadioButton
+                            android:id="@+id/radio_dark_theme"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="深色主题" />
+                    </RadioGroup>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingTop="10dp">
+
+                        <Button
+                            android:id="@+id/btn_import_contacts"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:text="导入联系人"
+                            android:backgroundTint="@color/purple_200"/>
+
+                        <Button
+                            android:id="@+id/btn_export_contacts"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:text="导出联系人"
+                            android:layout_marginStart="10dp"
+                            android:backgroundTint="@color/purple_200"/>
+                    </LinearLayout>
+                </LinearLayout>
             </androidx.cardview.widget.CardView>
-
 
             <TextView
                 android:layout_width="wrap_content"

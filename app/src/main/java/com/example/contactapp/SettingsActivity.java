@@ -1,10 +1,15 @@
 package com.example.contactapp;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.Settings;
+import android.util.Log;
 import android.view.Window;
 import android.view.WindowInsetsController;
 import android.widget.EditText;
@@ -14,6 +19,7 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.ActivityCompat;
@@ -34,6 +40,7 @@ import java.util.Set;
 
 public class SettingsActivity extends AppCompatActivity {
 
+    private static final int REQUEST_EXTERNAL_STORAGE_PERMISSION = 1;
     private ActivitySettingsBinding binding;
 
     private GroupAdapter groupAdapter;
@@ -51,8 +58,6 @@ public class SettingsActivity extends AppCompatActivity {
         // 加载配置信息
         loadSettings();
 
-        // 初始化view
-        super.onCreate(savedInstanceState);
         binding = ActivitySettingsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
@@ -67,10 +72,6 @@ public class SettingsActivity extends AppCompatActivity {
         binding.radioDarkTheme.setChecked(isDarkTheme);
         binding.radioListLayout.setChecked(isListLayout);
         binding.radioCardLayout.setChecked(!isListLayout);
-
-        // 检查和请求存储权限
-        checkAndRequestPermissions();
-
         // 初始化导入导出功能的 ActivityResultLauncher
         pickCsvFileLauncher = registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
             if (uri != null) {
@@ -86,12 +87,20 @@ public class SettingsActivity extends AppCompatActivity {
 
         // 设置导入按钮点击事件
         binding.btnImportContacts.setOnClickListener(view -> {
-            pickCsvFileLauncher.launch(new String[]{"*/*"});
+            if (checkAndRequestPermissions()) {
+                pickCsvFileLauncher.launch(new String[]{"*/*"}); // 允许所有文件类型选择
+            } else {
+
+                Toast.makeText(this, "没有存储权限，无法导入文件", Toast.LENGTH_SHORT).show();
+            }
         });
 
-        // 设置导出按钮点击事件
         binding.btnExportContacts.setOnClickListener(view -> {
-            createCsvFileLauncher.launch("contacts.csv");
+            if (checkAndRequestPermissions()) {
+                createCsvFileLauncher.launch("contacts.csv");
+            } else {
+                Toast.makeText(this, "没有存储权限，无法导出文件", Toast.LENGTH_SHORT).show();
+            }
         });
 
         // 更改group
@@ -129,30 +138,52 @@ public class SettingsActivity extends AppCompatActivity {
             editor.apply();
             recreate();
         });
+        super.onCreate(savedInstanceState);
     }
 
-    private void checkAndRequestPermissions() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{
-                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE
-            }, 1);
+    private boolean checkAndRequestPermissions() {
+        boolean hasPermission;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            hasPermission = Environment.isExternalStorageManager();
+            Log.d("SettingsActivity", "Checking permission for Android R+: " + hasPermission);
+        } else {
+            hasPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+            Log.d("SettingsActivity", "Checking standard storage permissions: " + hasPermission);
         }
+        if(!hasPermission)showExplanationDialog();
+        return hasPermission;
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 1) {
+        if (requestCode == REQUEST_EXTERNAL_STORAGE_PERMISSION) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "存储权限已授予", Toast.LENGTH_SHORT).show();
+                // 权限被授予，可以进行文件操作
             } else {
-                Toast.makeText(this, "需要存储权限才能导入或导出联系人", Toast.LENGTH_SHORT).show();
+                showExplanationDialog();
+//                Log.d("Settings","len "+grantResults.length+" "+PackageManager.PERMISSION_GRANTED+" "+grantResults[0]);
+                // 权限被拒绝，需要提示用户或者进行其他操作
             }
         }
     }
 
+
+
+    private void showExplanationDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("存储权限被拒绝")
+                .setMessage("您已拒绝存储权限。请在设置中启用它，以允许应用导入和导出联系人。")
+                .setPositiveButton("打开设置", (dialogInterface, i) -> {
+                    Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                    intent.setData(Uri.parse("package:" + getPackageName()));
+                    startActivity(intent);
+                })
+                .setNegativeButton("取消", (dialogInterface, i) -> dialogInterface.dismiss())
+                .create()
+                .show();
+    }
     private void loadSettings() {
         sharedPreferences = getSharedPreferences("settings", MODE_PRIVATE);
         isDarkTheme = sharedPreferences.getBoolean("isDarkTheme", false);
@@ -199,9 +230,12 @@ public class SettingsActivity extends AppCompatActivity {
             String groupName = input.getText().toString().trim();
 
             if (!groupName.isEmpty() && !groupList.contains(groupName)) {
-                groupList.add(groupList.size(), groupName);
-                Collections.sort(groupList);
-                groupAdapter.notifyDataSetChanged();
+                int insertIndex = Collections.binarySearch(groupList, groupName);
+                if (insertIndex < 0) {
+                    insertIndex = -insertIndex - 1;
+                }
+                groupList.add(insertIndex, groupName);
+                groupAdapter.notifyItemInserted(insertIndex);
                 saveGroups();
             } else {
                 Toast.makeText(this, "不允许的分组名", Toast.LENGTH_SHORT).show();
