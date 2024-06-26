@@ -78,6 +78,13 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
+        binding.searchView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                binding.searchView.onActionViewExpanded();
+            }
+        });
+
     }
 
     @Override
@@ -145,6 +152,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
         );
+
     }
 
     private void reloadData() {
