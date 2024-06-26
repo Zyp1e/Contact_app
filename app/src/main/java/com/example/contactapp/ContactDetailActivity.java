@@ -123,7 +123,7 @@ public class ContactDetailActivity extends AppCompatActivity {
     }
 
     private void saveContact() {
-        // 保存联系人逻辑（保存到数据库）
+        // 保存联系人逻辑（可以保存到数据库或其他持久化存储）
         if (contact != null) {
             contact.setName(binding.etName.getText().toString());
             contact.setNickname(binding.etNickname.getText().toString());
