@@ -60,7 +60,7 @@ public class SettingsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         // 加载配置信息
         loadSettings();
-
+        dbHelper = new ContactDatabaseHelper(this);
         binding = ActivitySettingsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
@@ -266,7 +266,7 @@ public class SettingsActivity extends AppCompatActivity {
             int position = groupList.indexOf(group);
             if (!newGroupName.isEmpty() && !groupList.contains(newGroupName) && position != -1) {
                 groupList.set(position, newGroupName);
-                dbHelper = new ContactDatabaseHelper(this);
+
                 contactList = dbHelper.getAllContacts();
                 for(Contact contact:contactList){
 //                    Log.d("setting", String.valueOf(" "+contact.getGroup()==group));
@@ -293,6 +293,16 @@ public class SettingsActivity extends AppCompatActivity {
             groupList.remove(position);
             groupAdapter.notifyItemRemoved(position);
             saveGroups();
+            contactList = dbHelper.getAllContacts();
+            for(Contact contact:contactList){
+//                    Log.d("setting", String.valueOf(" "+contact.getGroup()==group));
+                if(Objects.equals(contact.getGroup(), group)){
+//                    Log.d("setting"," "+contact.getGroup()+" "+group);
+                    contact.setGroup("全部");
+                    dbHelper.updateContact(contact);
+
+                }
+            }
             Toast.makeText(this, "删除成功", Toast.LENGTH_SHORT).show();
         }
     }

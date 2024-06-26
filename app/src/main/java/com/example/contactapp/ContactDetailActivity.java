@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.TextUtils;
+import android.util.Log;
 import android.widget.ArrayAdapter;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -19,6 +20,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.contactapp.databinding.ActivityContactDetailBinding;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 public class ContactDetailActivity extends AppCompatActivity {
@@ -96,14 +98,11 @@ public class ContactDetailActivity extends AppCompatActivity {
             binding.etNickname.setText(contact.getNickname());  // 设置昵称文本框
             binding.etPhoneNumber.setText(contact.getPhoneNumber());  // 设置电话号码文本框
             // 设置分组下拉框的选择项
-            int index=0;
-            for(String group :groupList){
-                if(group=="全部"){
-                    break;
-                }
-                index++;
+            Log.d("detail"," "+contact.getGroup());
+            if(!groupList.contains(contact.getGroup())){
+
+                binding.spinnerGroup.setSelection(groupList.indexOf("全部"));
             }
-            if(!groupList.contains(contact.getGroup()))binding.spinnerGroup.setSelection(groupList.indexOf(index));
             else binding.spinnerGroup.setSelection(groupList.indexOf(contact.getGroup()));
 
             if (contact.getPhotoUri() != null) {
