@@ -40,6 +40,7 @@ import java.util.Set;
 
 public class SettingsActivity extends AppCompatActivity {
 
+    private static final int REQUEST_EXTERNAL_STORAGE_PERMISSION = 1;
     private ActivitySettingsBinding binding;
 
     private GroupAdapter groupAdapter;
@@ -86,7 +87,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         // 设置导入按钮点击事件
         binding.btnImportContacts.setOnClickListener(view -> {
-            if (checkStoragePermission()) {
+            if (checkAndRequestPermissions()) {
                 pickCsvFileLauncher.launch(new String[]{"*/*"}); // 允许所有文件类型选择
             } else {
 
@@ -95,7 +96,7 @@ public class SettingsActivity extends AppCompatActivity {
         });
 
         binding.btnExportContacts.setOnClickListener(view -> {
-            if (checkStoragePermission()) {
+            if (checkAndRequestPermissions()) {
                 createCsvFileLauncher.launch("contacts.csv");
             } else {
                 Toast.makeText(this, "没有存储权限，无法导出文件", Toast.LENGTH_SHORT).show();
@@ -140,7 +141,7 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
     }
 
-    private boolean checkStoragePermission() {
+    private boolean checkAndRequestPermissions() {
         boolean hasPermission;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             hasPermission = Environment.isExternalStorageManager();
@@ -154,19 +155,19 @@ public class SettingsActivity extends AppCompatActivity {
         return hasPermission;
     }
 
-//    @Override
-//    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-//        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-//        if (requestCode == REQUEST_EXTERNAL_STORAGE_PERMISSION) {
-//            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-//                // 权限被授予，可以进行文件操作
-//            } else {
-//                showExplanationDialog();
-////                Log.d("Settings","len "+grantResults.length+" "+PackageManager.PERMISSION_GRANTED+" "+grantResults[0]);
-//                // 权限被拒绝，需要提示用户或者进行其他操作
-//            }
-//        }
-//    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_EXTERNAL_STORAGE_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // 权限被授予，可以进行文件操作
+            } else {
+                showExplanationDialog();
+//                Log.d("Settings","len "+grantResults.length+" "+PackageManager.PERMISSION_GRANTED+" "+grantResults[0]);
+                // 权限被拒绝，需要提示用户或者进行其他操作
+            }
+        }
+    }
 
 
 
@@ -229,9 +230,12 @@ public class SettingsActivity extends AppCompatActivity {
             String groupName = input.getText().toString().trim();
 
             if (!groupName.isEmpty() && !groupList.contains(groupName)) {
-                groupList.add(groupList.size(), groupName);
-                Collections.sort(groupList);
-                groupAdapter.notifyDataSetChanged();
+                int insertIndex = Collections.binarySearch(groupList, groupName);
+                if (insertIndex < 0) {
+                    insertIndex = -insertIndex - 1;
+                }
+                groupList.add(insertIndex, groupName);
+                groupAdapter.notifyItemInserted(insertIndex);
                 saveGroups();
             } else {
                 Toast.makeText(this, "不允许的分组名", Toast.LENGTH_SHORT).show();
