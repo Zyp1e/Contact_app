@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 public class SettingsActivity extends AppCompatActivity {
@@ -53,7 +54,8 @@ public class SettingsActivity extends AppCompatActivity {
     private SharedPreferences sharedPreferences;
     private ActivityResultLauncher<String[]> pickCsvFileLauncher;
     private ActivityResultLauncher<String> createCsvFileLauncher;
-
+    private ContactDatabaseHelper dbHelper;
+    private List<Contact> contactList = new ArrayList<>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // 加载配置信息
@@ -264,6 +266,17 @@ public class SettingsActivity extends AppCompatActivity {
             int position = groupList.indexOf(group);
             if (!newGroupName.isEmpty() && !groupList.contains(newGroupName) && position != -1) {
                 groupList.set(position, newGroupName);
+                dbHelper = new ContactDatabaseHelper(this);
+                contactList = dbHelper.getAllContacts();
+                for(Contact contact:contactList){
+//                    Log.d("setting", String.valueOf(" "+contact.getGroup()==group));
+                    if(Objects.equals(contact.getGroup(), group)){
+                        Log.d("setting"," "+contact.getGroup()+" "+group);
+                        contact.setGroup(newGroupName);
+                        dbHelper.updateContact(contact);
+
+                    }
+                }
                 groupAdapter.notifyItemChanged(position);
                 saveGroups();
 
