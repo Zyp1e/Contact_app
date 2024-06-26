@@ -171,7 +171,7 @@ public class ContactAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                         filteredResults.add(contact);
                     }
                 }
-
+                filteredResults.sort((c1, c2) -> c1.getName().compareToIgnoreCase(c2.getName()));
                 FilterResults results = new FilterResults();
                 results.values = filteredResults;
                 return results;

@@ -266,6 +266,7 @@ public class MainActivity extends AppCompatActivity {
     // 模拟获取联系人数据
     private void loadContacts() {
         contactList = dbHelper.getAllContacts();
+        groupList=dbHelper.getAllGroups();
         for (Contact contact : contactList) {
             int i = 1;
             if (!groupList.contains(contact.getGroup())) {

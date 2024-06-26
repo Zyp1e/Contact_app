@@ -96,7 +96,15 @@ public class ContactDetailActivity extends AppCompatActivity {
             binding.etNickname.setText(contact.getNickname());  // 设置昵称文本框
             binding.etPhoneNumber.setText(contact.getPhoneNumber());  // 设置电话号码文本框
             // 设置分组下拉框的选择项
-            binding.spinnerGroup.setSelection(groupList.indexOf(contact.getGroup()));
+            int index=0;
+            for(String group :groupList){
+                if(group=="全部"){
+                    break;
+                }
+                index++;
+            }
+            if(!groupList.contains(contact.getGroup()))binding.spinnerGroup.setSelection(groupList.indexOf(index));
+            else binding.spinnerGroup.setSelection(groupList.indexOf(contact.getGroup()));
 
             if (contact.getPhotoUri() != null) {
                 // 如果有设置过照片URI，则显示照片
