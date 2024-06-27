@@ -40,7 +40,6 @@ public class ContactDetailActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-
         // 初始化 Spinner
         Set<String> groupSet = getSharedPreferences("settings", MODE_PRIVATE).getStringSet("groupList", null);
         if (groupSet != null) {
@@ -126,6 +125,9 @@ public class ContactDetailActivity extends AppCompatActivity {
             }
             // 使用当前时间戳创建新的联系人对象
             contact = new Contact(System.currentTimeMillis(), "", "", "", "", null);
+            binding.etName.setHint("姓名");
+            binding.etNickname.setHint("电子邮件");
+            binding.etPhoneNumber.setHint("电话");
         }
     }
 
