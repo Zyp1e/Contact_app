@@ -171,7 +171,8 @@ public class ContactAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                         filteredResults.add(contact);
                     }
                 }
-                filteredResults.sort((c1, c2) -> c1.getName().compareToIgnoreCase(c2.getName()));
+//                filteredResults.sort((c1, c2) -> c1.getName().compareToIgnoreCase(c2.getName()));
+                Collections.sort(filteredResults, new PinyinComparator());
                 FilterResults results = new FilterResults();
                 results.values = filteredResults;
                 return results;
@@ -248,7 +249,8 @@ public class ContactAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 filteredContactList.add(contact);
             }
         }
-        Collections.sort(filteredContactList, (c1, c2) -> c1.getName().compareToIgnoreCase(c2.getName()));
+//        Collections.sort(filteredContactList, (c1, c2) -> c1.getName().compareToIgnoreCase(c2.getName()));
+        Collections.sort(filteredContactList, new PinyinComparator());
     }
 
 

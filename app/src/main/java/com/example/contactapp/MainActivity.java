@@ -274,7 +274,8 @@ public class MainActivity extends AppCompatActivity {
             }
             Log.d(TAG, "now is" + i);
         }
-        contactList.sort((c1, c2) -> c1.getName().compareToIgnoreCase(c2.getName()));
+//        contactList.sort((c1, c2) -> c1.getName().compareToIgnoreCase(c2.getName()));
+        Collections.sort(contactList, new PinyinComparator());
     }
 
     private Contact findContactById(long id) {
